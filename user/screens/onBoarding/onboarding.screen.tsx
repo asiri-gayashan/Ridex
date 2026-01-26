@@ -11,7 +11,7 @@ import { BackArrow } from "@/utils/icons";
 export default function OnBoardingScreen() {
   return (
     <View style={{ flex: 1, backgroundColor: color.whiteColor }}>
-      <Text>RideX Onboarding</Text>
+      {/* <Text>RideX Onboarding</Text> */}
       <Swiper
         activeDotStyle={styles.activeStyle}
         removeClippedSubviews={true}

@@ -45,6 +45,7 @@ export default function SelectInput({
             backgroundColor: color.lightGray,
             borderColor: colors.border,
             height: windowHeight(39),
+            width: windowWidth(400),
             color: "#000",
           },
         }}
