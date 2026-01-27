@@ -11,29 +11,41 @@ const client = twilio(accountSid, authToken, {
 });
 
 
-export const registerUser =  async(req : Request, res: Response, next: NextFunction) => {
+export const registerUser = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const { phone_number } = req.body;
     try {
-        const {phone_number} = req.body;
-        try {
-            await client.verify.v2
+      await client.verify.v2
         ?.services(process.env.TWILIO_SERVICE_SID!)
         .verifications.create({
           channel: "sms",
           to: phone_number,
         });
-        } catch (error) {
-            console.log(error);
-        }
-        res.status(201).json({
-            success: true,
-        });
 
+      res.status(201).json({
+        success: true,
+      });
     } catch (error) {
-        console.log(error);
+      console.log(error);
+      res.status(400).json({
+        success: false,
+      });
     }
-}
+  } catch (error) {
+    console.log(error);
+    res.status(400).json({
+      success: false,
+    });
+  }
+};
 
 
+
+//otp
 
 
 

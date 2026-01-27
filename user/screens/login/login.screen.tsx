@@ -23,15 +23,23 @@ export default function LoginScreen() {
     const phoneNumber = `+${countryCode}${phone_number}`;
     console.log(process.env.EXPO_PUBLIC_SERVER_URI);
 
-    await axios.post(`${process.env.EXPO_PUBLIC_SERVER_URI}/registration`, {
-      phone_number: phoneNumber,
-    }).then((res)=>{
-      console.log(res);
-    }).catch((error)=>{
-      console.log(error);
-    });
-
-
+    // await axios.post(`${process.env.EXPO_PUBLIC_SERVER_URI}/registration`, {
+    await axios
+      .post(`${process.env.EXPO_PUBLIC_SERVER_URI}/registration`, {
+        phone_number: phoneNumber,
+      })
+      .then((res) => {
+        // console.log(res);
+        router.push("/(routes)/otp-verification");
+      })
+      .catch((error) => {
+        // console.log(error);
+        // setloading(false);
+        toast.show("Something went wrong! please re check your phone number!", {
+          type: "danger",
+          placement: "bottom",
+        });
+      });
   };
 
   return (

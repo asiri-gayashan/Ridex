@@ -9,8 +9,4 @@ userRouter.post("/registration", registerUser);
 
 
 
-
-
-
-
 export default userRouter;
