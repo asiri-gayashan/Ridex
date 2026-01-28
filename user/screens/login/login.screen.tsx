@@ -11,7 +11,6 @@ import Button from "@/components/common/button";
 import { router } from "expo-router";
 import { useToast } from "react-native-toast-notifications";
 import axios from "axios";
-import { error } from "console";
 
 export default function LoginScreen() {
   const [phone_number, setphone_number] = useState("");
@@ -20,31 +19,38 @@ export default function LoginScreen() {
   const toast = useToast();
 
   const handleSubmit = async () => {
-    const phoneNumber = `+${countryCode}${phone_number}`;
-    console.log(process.env.EXPO_PUBLIC_SERVER_URI);
-
-    // await axios.post(`${process.env.EXPO_PUBLIC_SERVER_URI}/registration`, {
-    await axios
-      .post(`${process.env.EXPO_PUBLIC_SERVER_URI}/registration`, {
-        phone_number: phoneNumber,
-      })
-      .then((res) => {
-        // console.log(res);
-         router.push({
+    if (phone_number === "" || countryCode === "") {
+      toast.show("Please fill the fields!", {
+        placement: "bottom",
+      });
+    } else {
+      setloading(true);
+      const phoneNumber = `${countryCode}${phone_number}`;
+      await axios
+        .post(`${process.env.EXPO_PUBLIC_SERVER_URI}/registration`, {
+          phone_number: phoneNumber,
+        })
+        
+        .then((res) => {
+          setloading(false);
+          router.push({
             pathname: "/(routes)/otp-verification",
             params: { phoneNumber },
           });
-      })
-      .catch((error) => {
-        // console.log(error);
-        // setloading(false);
-        toast.show("Something went wrong! please re check your phone number!", {
-          type: "danger",
-          placement: "bottom",
+        })
+        .catch((error) => {
+          console.log(error);
+          setloading(false);
+          toast.show(
+            "Something went wrong! please re check your phone number!",
+            {
+              type: "danger",
+              placement: "bottom",
+            }
+          );
         });
-      });
+    }
   };
-
   return (
     <AuthContainer
       topSpace={windowHeight(150)}
@@ -63,7 +69,11 @@ export default function LoginScreen() {
                   setCountryCode={setCountryCode}
                 />
                 <View style={[external.mt_25, external.Pb_15]}>
-                  <Button title="Get Otp" onPress={() => handleSubmit()} />
+                  <Button
+                    title="Get Otp"
+                    onPress={() => handleSubmit()}
+                    disabled={loading}
+                  />
                 </View>
               </View>
             </View>
