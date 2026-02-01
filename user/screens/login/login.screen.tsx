@@ -30,7 +30,10 @@ export default function LoginScreen() {
       })
       .then((res) => {
         // console.log(res);
-        router.push("/(routes)/otp-verification");
+        router.push({
+            pathname: "/(routes)/otp-verification",
+            params: { phoneNumber },
+          });
       })
       .catch((error) => {
         // console.log(error);

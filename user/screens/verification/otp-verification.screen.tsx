@@ -26,9 +26,39 @@ export default function index() {
         type: "danger",
         placement: "bottom",
       });
-    }else{
-      const otpNumber = `${otp}`;
-      console.log(otp);
+    } else {
+      const otpNumbers = `${otp}`;
+      console.log(otpNumbers, phoneNumber);
+
+      await axios
+        .post(`${process.env.EXPO_PUBLIC_SERVER_URI}/verify-otp`, {
+          phone_number: phoneNumber,
+          otp: otpNumbers,
+        })
+        .then(async (res) => {
+          // setLoader(false);
+          // if (res.data.user.email === null) {
+          //   router.push({
+          //     pathname: "/(routes)/registration",
+          //     params: { user: JSON.stringify(res.data.user) },
+          //   });
+          //   toast.show("Account verified!");
+          // } else {
+          //   await AsyncStorage.setItem("accessToken", res.data.accessToken);
+          //   router.push("/(tabs)/home");
+          // }
+
+
+            toast.show("Account verified!");
+
+        })
+        .catch((error) => {
+          setLoader(false);
+          toast.show("Something went wrong! please re check your otp!", {
+            type: "danger",
+            placement: "bottom",
+          });
+        });
     }
   };
 
@@ -44,7 +74,7 @@ export default function index() {
           />
           <OTPTextInput
             handleTextChange={(code) => setOtp(code)}
-            inputCount={4}
+            inputCount={6}
             textInputStyle={style.otpTextInput}
             tintColor={color.subtitle}
             autoFocus={false}
