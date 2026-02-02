@@ -5,6 +5,7 @@ import { windowHeight, windowWidth } from "@/themes/app.constant";
 import TitleView from "@/components/signup/title.view";
 import Input from "@/components/common/input";
 import Button from "@/components/common/button";
+
 import color from "@/themes/app.colors";
 import axios from "axios";
 import { router, useLocalSearchParams } from "expo-router";
@@ -15,35 +16,45 @@ export default function RegistrationScreen() {
   const { colors } = useTheme();
   const { user } = useLocalSearchParams() as any;
   const [emailFormatWarning, setEmailFormatWarning] = useState("");
+  const parsedUser = JSON.parse(user);
   const [showWarning, setShowWarning] = useState(false);
   const [formData, setFormData] = useState({
     name: "",
     phoneNumber: "",
     email: "",
-    countryCode: "",
-    refferalId: "",
   });
 
   const handleSubmit = async () => {
-    await axios
-      .put(`${process.env.something}/sign-up-user`, {
-        userId: user?.id,
-        email: formData.email,
-        name: formData.name,
-      })
-      .then((res) => {
-        console.log(res);
-        router.push("/(routes)/email-verification");
-      })
-      .catch((error) => {
-        console.log(error);
-        Toast.show(error.data.message, {
-          type: "danger",
-        });
-      });
-  };
+    const userData: any = {
+      id: parsedUser.id,
+      name: formData.name,
+      email: formData.email,
+      phone_number: parsedUser.phone_number,
+    };
+    router.push({
+      pathname: "/(routes)/email-verification",
+      params: { user: JSON.stringify(userData) },
+    });
 
-  
+    // await axios
+    //   .put(`${process.env.something}/sign-up-user`, {
+    //     userId: user?.id,
+    //     email: formData.email,
+    //     name: formData.name,
+    //   })
+    //   .then((res) => {
+    //     console.log(res);
+    //     router.push("/(routes)/email-verification");
+    //   })
+    //   .catch((error) => {
+    //     console.log(error);
+    //     Toast.show(error.data.message, {
+    //       type: "danger",
+    //     });
+    //   });
+
+    console.log(user);
+  };
 
   const handleChange = (key: string, value: string) => {
     setFormData((prevData) => ({
@@ -87,7 +98,7 @@ export default function RegistrationScreen() {
               <Input
                 title="Phone Number"
                 placeholder="Enter your phone number"
-                value={"+94768645011"}
+                value={parsedUser?.phone_number}
                 disabled={true}
               />
 

@@ -9,5 +9,7 @@ export default function index() {
 
   return (
     <Redirect href={!isLoggedIn ? "/(routes)/onboarding" : "/(tabs)/home"} />
+    // <Redirect href={"/(routes)/email-verification"} />
+    // <Redirect href={"/(tabs)/home"} />
   );
 }
