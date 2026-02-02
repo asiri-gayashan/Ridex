@@ -29,15 +29,17 @@ export default function LoginScreen() {
         phone_number: phoneNumber,
       })
       .then((res) => {
-        // console.log(res);
+        setloading(false);
+        console.log(res);
+
         router.push({
-            pathname: "/(routes)/otp-verification",
-            params: { phoneNumber },
-          });
+          pathname: "/(routes)/otp-verification",
+          params: { phoneNumber },
+        });
       })
       .catch((error) => {
         // console.log(error);
-        // setloading(false);
+        setloading(false);
         toast.show("Something went wrong! please re check your phone number!", {
           type: "danger",
           placement: "bottom",
@@ -63,7 +65,7 @@ export default function LoginScreen() {
                   setCountryCode={setCountryCode}
                 />
                 <View style={[external.mt_25, external.Pb_15]}>
-                  <Button title="Get Otp" onPress={() => handleSubmit()} />
+                  <Button title="Get Otp" onPress={() => handleSubmit()}  disabled={loading} />
                 </View>
               </View>
             </View>

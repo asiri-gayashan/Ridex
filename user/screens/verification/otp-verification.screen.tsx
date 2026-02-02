@@ -27,6 +27,7 @@ export default function index() {
         placement: "bottom",
       });
     } else {
+      setLoader(true);
       const otpNumbers = `${otp}`;
       console.log(otpNumbers, phoneNumber);
 
@@ -36,21 +37,9 @@ export default function index() {
           otp: otpNumbers,
         })
         .then(async (res) => {
-          // setLoader(false);
-          // if (res.data.user.email === null) {
-          //   router.push({
-          //     pathname: "/(routes)/registration",
-          //     params: { user: JSON.stringify(res.data.user) },
-          //   });
-          //   toast.show("Account verified!");
-          // } else {
-          //   await AsyncStorage.setItem("accessToken", res.data.accessToken);
-          //   router.push("/(tabs)/home");
-          // }
-
-
-            toast.show("Account verified!");
-
+          setLoader(false);
+          console.log(res);
+          toast.show("Account verified!");
         })
         .catch((error) => {
           setLoader(false);
@@ -84,6 +73,7 @@ export default function index() {
               title="Verify"
               // onPress={() => router.push("/(tabs)/home")}
               onPress={() => handleSubmit()}
+              disabled={loader}
             />
           </View>
           <View style={external.mb_15}>

@@ -1,6 +1,7 @@
 require("dotenv").config();
 import { NextFunction, Request, Response } from "express";
 import twilio from "twilio";
+import prisma from "../utils/prisma";
 
 const accountSid = process.env.TWILIO_ACCOUNT_SID;
 const authToken = process.env.TWILIO_AUTH_TOKEN;
@@ -54,35 +55,36 @@ export const verifyOtp = async (
       await client.verify.v2
         .services(process.env.TWILIO_SERVICE_SID!)
         .verificationChecks.create({
-          to: phone_number,
+          to: phone_number, 
           code: otp,
         });
 
-      res.status(200).json({
-        success: true,
-        message: "OTP verified successfully!",
-      });
       // is user exist
-      // const isUserExist = await prisma.user.findUnique({
-      //   where: {
-      //     phone_number,
-      //   },
-      // });
-      // if (isUserExist) {
-      //   await sendToken(isUserExist, res);
-      // } else {
-      //   // create account
-      //   // const user = await prisma.user.create({
-      //   //   data: {
-      //   //     phone_number: phone_number,
-      //   //   },
-      //   // });
-      //   // res.status(200).json({
-      //   //   success: true,
-      //   //   message: "OTP verified successfully!",
-      //   //   user: user,
-      //   // });
-      // }
+      const isUserExist = await prisma.user.findUnique({
+        where: {
+          phone_number,
+        },
+      });
+      if (isUserExist) {
+        //   await sendToken(isUserExist, res);
+        res.status(200).json({
+          success: true,
+          message: "OTP verified successfully!",
+          user: isUserExist,
+        });
+      } else {
+        // create account
+        const user = await prisma.user.create({
+          data: {
+            phone_number: phone_number,
+          },
+        });
+        res.status(200).json({
+          success: true,
+          message: "OTP verified successfully!",
+          user: user,
+        });
+      }
     } catch (error) {
       console.log(error);
       res.status(400).json({
