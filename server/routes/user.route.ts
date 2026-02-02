@@ -1,5 +1,5 @@
 import express from "express";
-import { registerUser, verifyOtp } from "../controllers/user.controller";
+import { registerUser, verifyOtp, signUpNewUser } from "../controllers/user.controller";
 
 
 
@@ -8,6 +8,7 @@ userRouter.post("/registration", registerUser);
 
 
 userRouter.post("/verify-otp", verifyOtp);
+userRouter.put("/sign-up-user", signUpNewUser);
 
 
 export default userRouter;

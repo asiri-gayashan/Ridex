@@ -6,9 +6,14 @@ import TitleView from "@/components/signup/title.view";
 import Input from "@/components/common/input";
 import Button from "@/components/common/button";
 import color from "@/themes/app.colors";
+import axios from "axios";
+import { router, useLocalSearchParams } from "expo-router";
+import { error } from "console";
+import { Toast } from "react-native-toast-notifications";
 
 export default function RegistrationScreen() {
   const { colors } = useTheme();
+  const { user } = useLocalSearchParams() as any;
   const [emailFormatWarning, setEmailFormatWarning] = useState("");
   const [showWarning, setShowWarning] = useState(false);
   const [formData, setFormData] = useState({
@@ -19,7 +24,26 @@ export default function RegistrationScreen() {
     refferalId: "",
   });
 
-  const handleSubmit = async () => {};
+  const handleSubmit = async () => {
+    await axios
+      .put(`${process.env.something}/sign-up-user`, {
+        userId: user?.id,
+        email: formData.email,
+        name: formData.name,
+      })
+      .then((res) => {
+        console.log(res);
+        router.push("/(routes)/email-verification");
+      })
+      .catch((error) => {
+        console.log(error);
+        Toast.show(error.data.message, {
+          type: "danger",
+        });
+      });
+  };
+
+  
 
   const handleChange = (key: string, value: string) => {
     setFormData((prevData) => ({
@@ -28,7 +52,6 @@ export default function RegistrationScreen() {
     }));
   };
 
- 
   return (
     <ScrollView>
       <View>

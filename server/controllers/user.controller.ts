@@ -55,7 +55,7 @@ export const verifyOtp = async (
       await client.verify.v2
         .services(process.env.TWILIO_SERVICE_SID!)
         .verificationChecks.create({
-          to: phone_number, 
+          to: phone_number,
           code: otp,
         });
 
@@ -97,5 +97,51 @@ export const verifyOtp = async (
     res.status(400).json({
       success: false,
     });
+  }
+};
+
+//sugn up new user
+
+export const signUpNewUser = async (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) => {
+  try {
+    const { userId, email, name } = req.body;
+    const user  = await prisma.user.findUnique({
+      where: {
+        id: userId,
+      },
+    });
+
+    if(user?.email === null){
+      const updatedUser = await prisma.user.update({
+        where:{
+          id: userId,
+        },
+        data:{
+          name: name,
+          email: email,
+        },
+      });
+
+      res.status(201).json({
+        success: true,
+        // message: "User updated successfully!",
+        user: updatedUser,
+      });
+    }else{
+      res.status(400).json({
+        success: false,
+        message: "User already registered!",
+      });
+    }
+
+
+
+  } catch (error) {
+    console.log(error);
+    
   }
 };

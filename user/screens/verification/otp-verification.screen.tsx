@@ -38,8 +38,16 @@ export default function index() {
         })
         .then(async (res) => {
           setLoader(false);
-          console.log(res);
-          toast.show("Account verified!");
+          if (res.data.user.email === null) {
+            router.push({
+              pathname: "/(routes)/registration",
+              params: { user: JSON.stringify(res.data.user) },
+            });
+            toast.show("Account verified!");
+          } else {
+            // await AsyncStorage.setItem("accessToken", res.data.accessToken);
+            router.push("/(tabs)/home");
+          }
         })
         .catch((error) => {
           setLoader(false);
