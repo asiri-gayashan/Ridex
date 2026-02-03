@@ -24,36 +24,34 @@ export default function RegistrationScreen() {
     email: "",
   });
 
+  const [loading, setLoading] = useState(false);
+
   const handleSubmit = async () => {
-    const userData: any = {
-      id: parsedUser.id,
-      name: formData.name,
-      email: formData.email,
-      phone_number: parsedUser.phone_number,
-    };
-    router.push({
-      pathname: "/(routes)/email-verification",
-      params: { user: JSON.stringify(userData) },
-    });
-
-    // await axios
-    //   .put(`${process.env.something}/sign-up-user`, {
-    //     userId: user?.id,
-    //     email: formData.email,
-    //     name: formData.name,
-    //   })
-    //   .then((res) => {
-    //     console.log(res);
-    //     router.push("/(routes)/email-verification");
-    //   })
-    //   .catch((error) => {
-    //     console.log(error);
-    //     Toast.show(error.data.message, {
-    //       type: "danger",
-    //     });
-    //   });
-
-    console.log(user);
+    setLoading(true);
+    await axios
+      .post(`${process.env.EXPO_PUBLIC_SERVER_URI}/email-otp-request`, {
+        email: formData.email,
+        name: formData.name,
+        userId: parsedUser.id,
+      })
+      .then((res) => {
+        setLoading(false);
+        const userData: any = {
+          id: parsedUser.id,
+          name: formData.name,
+          email: formData.email,
+          phone_number: parsedUser.phone_number,
+          token: res.data.token,
+        };
+        router.push({
+          pathname: "/(routes)/email-verification",
+          params: { user: JSON.stringify(userData) },
+        });
+      })
+      .catch((error) => {
+        setLoading(false);
+        console.log(error);
+      });
   };
 
   const handleChange = (key: string, value: string) => {
@@ -123,6 +121,7 @@ export default function RegistrationScreen() {
               <View style={styles.margin}>
                 <Button
                   onPress={() => handleSubmit()}
+                  disabled={loading}
                   title="Next"
                   backgroundColor={color.buttonBg}
                   textColor={color.whiteColor}

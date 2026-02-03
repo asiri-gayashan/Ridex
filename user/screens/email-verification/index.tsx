@@ -21,7 +21,21 @@ export default function EmailVerificationScreen() {
   const Toast = useToast();
   console.log(parsedUser);
 
-  const handleSubmit = async () => {};
+  const handleSubmit = async () => {
+
+    const otpNumbers = `${otp}`;
+     await axios
+      .put(`${process.env.EXPO_PUBLIC_SERVER_URI}/email-otp-verify`, {
+        token: parsedUser.token,
+        otp: otpNumbers ,
+      })
+      .then((res) => {
+        console.log(res);
+      })
+      .catch((error) => {
+        console.log(error);
+      });
+  };
 
   return (
     <AuthContainer
