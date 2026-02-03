@@ -12,7 +12,7 @@ import { router, useLocalSearchParams } from "expo-router";
 import { commonStyles } from "@/styles/common.style";
 import { useToast } from "react-native-toast-notifications";
 import axios from "axios";
-// import AsyncStorage from "@react-native-async-storage/async-storag";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 export default function index() {
   const [otp, setOtp] = useState("");
@@ -45,7 +45,7 @@ export default function index() {
             });
             toast.show("Account verified!");
           } else {
-            // await AsyncStorage.setItem("accessToken", res.data.accessToken);
+            await AsyncStorage.setItem("accessToken", res.data.accessToken);
             router.push("/(tabs)/home");
           }
         })

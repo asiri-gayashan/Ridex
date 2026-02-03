@@ -1,10 +1,16 @@
 import { Person } from "@/assets/icons/person";
+import { useGetUserData } from "@/hooks/useGetUserData";
 import color from "@/themes/app.colors";
 import { Car, CarPrimary, Category, Home, HomeLight } from "@/utils/icons";
 import { Tabs } from "expo-router";
+import { View, Text } from "react-native-reanimated/lib/typescript/Animated";
 
 export default function _layout() {
+
+
   return (
+    
+
     <Tabs
       screenOptions={({ route }) => {
         return {
@@ -47,5 +53,8 @@ export default function _layout() {
       <Tabs.Screen name="history/index" />
       <Tabs.Screen name="profile/index" />
     </Tabs>
+
+
+
   );
 }
