@@ -4,6 +4,7 @@ import twilio from "twilio";
 import prisma from "../utils/prisma";
 import jwt from "jsonwebtoken";
 import { nylas } from "../app";
+import { sendToken } from "../utils/send-token";
 
 const accountSid = process.env.TWILIO_ACCOUNT_SID;
 const authToken = process.env.TWILIO_AUTH_TOKEN;
@@ -221,7 +222,7 @@ export const verifyingEmail = async (
 
     const { name, email, userId } = newUser.user;
     console.log(newUser.user);
-    
+
     const user = await prisma.user.findUnique({
       where: {
         id: userId,
@@ -237,7 +238,7 @@ export const verifyingEmail = async (
           email: email,
         },
       });
-      // await sendToken(updatedUser, res);
+      await sendToken(updatedUser, res);
       res.status(201).json({
         success: true,
         user: updatedUser,

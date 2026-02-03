@@ -12,6 +12,7 @@ import color from "@/themes/app.colors";
 import { Toast, useToast } from "react-native-toast-notifications";
 import OTPTextInput from "react-native-otp-textinput";
 import axios from "axios";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 export default function EmailVerificationScreen() {
   const [otp, setOtp] = useState("");
@@ -22,18 +23,26 @@ export default function EmailVerificationScreen() {
   console.log(parsedUser);
 
   const handleSubmit = async () => {
-
+    setLoader(true);
     const otpNumbers = `${otp}`;
-     await axios
+    await axios
       .put(`${process.env.EXPO_PUBLIC_SERVER_URI}/email-otp-verify`, {
         token: parsedUser.token,
-        otp: otpNumbers ,
+        otp: otpNumbers,
       })
       .then((res) => {
-        console.log(res);
+        setLoader(false);
+
+        AsyncStorage.setItem("accessToken", res.data.accessToken);
+        router.push("/(tabs)/home");
       })
       .catch((error) => {
-        console.log(error);
+        setLoader(false);
+
+        Toast.show(error.message, {
+          placement: "bottom",
+          type: "danger",
+        });
       });
   };
 
