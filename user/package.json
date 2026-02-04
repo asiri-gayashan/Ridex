@@ -9,6 +9,7 @@
     "web": "expo start --web"
   },
   "dependencies": {
+    "@react-native-async-storage/async-storage": "1.23.1",
     "@react-native-clipboard/clipboard": "^1.14.1",
     "axios": "^1.7.2",
     "expo": "~51.0.17",
@@ -23,7 +24,6 @@
     "react": "18.2.0",
     "react-native": "0.73.11",
     "react-native-google-places-autocomplete": "^2.5.6",
-    "react-native-maps": "1.14.0",
     "react-native-maps-directions": "^1.9.0",
     "react-native-otp-inputs": "^7.4.0",
     "react-native-otp-textinput": "^1.1.6",
@@ -34,7 +34,7 @@
     "react-native-svg": "^15.3.0",
     "react-native-swiper": "^1.6.0",
     "react-native-toast-notifications": "^3.4.0",
-    "@react-native-async-storage/async-storage": "1.23.1"
+    "react-native-maps": "1.14.0"
   },
   "devDependencies": {
     "@babel/core": "^7.20.0",

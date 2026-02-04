@@ -10,8 +10,8 @@ import axios from "axios";
 // import RideCard from "@/components/ride/ride.card";
 
 export default function HomeScreen() {
-    return (    
-        <View style={[commonStyles.flexContainer, { backgroundColor: "#fff" }]}>
+  return (
+    <View style={[commonStyles.flexContainer, { backgroundColor: "#fff" }]}>
       <SafeAreaView style={styles.container}>
         <View style={[external.p_5, external.ph_20]}>
           <Text
@@ -24,10 +24,8 @@ export default function HomeScreen() {
           </Text>
           <LocationSearchBar />
         </View>
-        <View style={{ padding: 5 }}>
-          
-        </View>
+        <View style={{ padding: 5 }}></View>
       </SafeAreaView>
     </View>
-    );
+  );
 }

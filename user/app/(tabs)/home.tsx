@@ -6,7 +6,6 @@ export default function home() {
   return (
     <View>
       <HomeScreen />
-      <Layouttabs />
     </View>
   );
 }
