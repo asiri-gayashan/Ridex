@@ -24,6 +24,7 @@
     "react": "18.2.0",
     "react-native": "0.73.11",
     "react-native-google-places-autocomplete": "^2.5.6",
+    "react-native-maps": "1.14.0",
     "react-native-maps-directions": "^1.9.0",
     "react-native-otp-inputs": "^7.4.0",
     "react-native-otp-textinput": "^1.1.6",
@@ -33,11 +34,11 @@
     "react-native-screens": "3.31.1",
     "react-native-svg": "^15.3.0",
     "react-native-swiper": "^1.6.0",
-    "react-native-toast-notifications": "^3.4.0",
-    "react-native-maps": "1.14.0"
+    "react-native-toast-notifications": "^3.4.0"
   },
   "devDependencies": {
     "@babel/core": "^7.20.0",
+    "@types/lodash": "^4.17.23",
     "@types/react": "~18.2.45",
     "@types/react-native": "^0.73.0",
     "typescript": "^5.1.3"
