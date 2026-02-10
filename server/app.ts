@@ -3,6 +3,7 @@ import express, { NextFunction, Request, Response } from "express";
 import cookieParser from "cookie-parser";
 import userRouter from "./routes/user.route";
 import Nylas from "nylas";
+import driverRouter from "./routes/driver.route";
 
 
 export const nylas = new Nylas({
@@ -22,6 +23,8 @@ app.use(cookieParser());
 
 // routes
 app.use("/api/v1", userRouter);
+app.use("/api/v1/driver", driverRouter);
+
 
 app.get("/test", (req: Request, res: Response, next: NextFunction) => {
   res.status(200).json({
