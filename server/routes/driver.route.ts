@@ -22,7 +22,7 @@ driverRouter.post("/login", verifyPhoneOtpForLogin);
 
 driverRouter.post("/verify-otp", verifyPhoneOtpForRegistration);
 
-driverRouter.post("/sending-otp-email", sendingOtpToEmail);
+// driverRouter.post("/sending-otp-email", sendingOtpToEmail);
 
 driverRouter.post("/registration-driver", verifyingEmailOtp);
 

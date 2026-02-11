@@ -104,11 +104,9 @@ export const verifyPhoneOtpForRegistration = async (
           code: otp,
         });
 
-        res.status(201).json({
-            success: true,
-        });
+      
 
-    //   await sendingOtpToEmail(req, res);
+      await sendingOtpToEmail(req, res);
     } catch (error) {
       console.log(error);
       res.status(400).json({
@@ -247,6 +245,21 @@ export const verifyingEmailOtp = async (req: Request, res: Response) => {
       success: false,
       message: "Your otp is expired!",
     });
+  }
+};
+
+
+// get logged in driver data
+export const getLoggedInDriverData = async (req: any, res: Response) => {
+  try {
+    const driver = req.driver;
+
+    res.status(201).json({
+      success: true,
+      driver,
+    });
+  } catch (error) {
+    console.log(error);
   }
 };
 
