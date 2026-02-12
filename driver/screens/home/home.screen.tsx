@@ -22,6 +22,9 @@ import color from "@/themes/app.colors";
 import Button from "@/components/common/button";
 import axios from "axios";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useGetDriverData } from "@/hooks/useGetDriverData";
+import { Toast } from "react-native-toast-notifications";
+import * as GeoLocation from "expo-location";
 
 export default function HomeScreen() {
 const [isOn, setIsOn] = useState<any>();
@@ -35,6 +38,7 @@ const [isOn, setIsOn] = useState<any>();
     latitudeDelta: 0.0922,
     longitudeDelta: 0.0421,
   });
+    const { driver, loading: DriverDataLoading } = useGetDriverData();
   const [currentLocationName, setcurrentLocationName] = useState("");
   const [destinationLocationName, setdestinationLocationName] = useState("");
   const [distance, setdistance] = useState<any>();
@@ -43,6 +47,104 @@ const [isOn, setIsOn] = useState<any>();
   const [currentLocation, setCurrentLocation] = useState<any>(null);
   const [lastLocation, setLastLocation] = useState<any>(null);
   const [recentRides, setrecentRides] = useState([]);
+  // const ws = new WebSocket("ws://192.168.1.11:8080");
+
+const ws = new WebSocket("ws://10.0.2.2:8080"); // For emulator
+
+   // socket updates
+  useEffect(() => {
+    ws.onopen = () => {
+      console.log("Connected to WebSocket server");
+      setWsConnected(true);
+    };
+
+    ws.onmessage = (e) => {
+      const message = JSON.parse(e.data);
+      console.log("Received message:", message);
+      // Handle received location updates here
+    };
+
+    ws.onerror = (e: any) => {
+      console.log("WebSocket error:", e.message);
+    };
+
+    ws.onclose = (e) => {
+      console.log("WebSocket closed:", e.code, e.reason);
+    };
+
+    return () => {
+      ws.close();
+    };
+  }, []);
+
+
+
+   const sendLocationUpdate = async (location: any) => {
+    // const accessToken = await AsyncStorage.getItem("accessToken");
+    // await axios
+    //   .get(`${process.env.EXPO_PUBLIC_SERVER_URI}/driver/me`, {
+    //     headers: {
+    //       Authorization: `Bearer ${accessToken}`,
+    //     },
+    //   })
+    //   .then((res) => {
+        // if (res.data) {
+          if (ws.readyState === WebSocket.OPEN) {
+            const message = JSON.stringify({
+              type: "locationUpdate",
+              data: location,
+              role: "driver",
+              // driver: res.data.driver.id!,
+              driver: driver?.id,
+            });
+            ws.send(message);
+          }
+        // }
+      // })
+      // .catch((error) => {
+      //   console.log(error);
+      // });
+  };
+
+
+
+  useEffect(() => {
+    (async () => {
+      let { status } = await GeoLocation.requestForegroundPermissionsAsync();
+      if (status !== "granted") {
+        Toast.show("Please give us to access your location to use this app!");
+        return;
+      }
+
+      await GeoLocation.watchPositionAsync(
+        {
+          accuracy: GeoLocation.Accuracy.High,
+          timeInterval: 1000,
+          distanceInterval: 1,
+        },
+        async (position) => {
+          const { latitude, longitude } = position.coords;
+          const newLocation = { latitude, longitude };
+
+          if (driver && wsConnected){
+            sendLocationUpdate({ latitude, longitude });
+          }
+
+          // if (
+          //   !lastLocation ||
+          //   haversineDistance(lastLocation, newLocation) > 200
+          // ) {
+          //   setCurrentLocation(newLocation);
+          //   setLastLocation(newLocation);
+          //   if (ws.readyState === WebSocket.OPEN) {
+          //     await sendLocationUpdate(newLocation);
+          //   }
+          // }
+        }
+      );
+    })();
+  }, []);
+
 
   const handleClose = () => {
     setIsModalVisible(false);
