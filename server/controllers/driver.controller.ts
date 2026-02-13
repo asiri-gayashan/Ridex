@@ -289,3 +289,29 @@ export const updateDriverStatus = async (req: any, res: Response) => {
     });
   }
 };
+
+
+
+export const getDriversById = async (req: Request, res: Response) => {
+  try {
+    const { ids } = req.query as any;
+    console.log(ids,'ids')
+    if (!ids) {
+      return res.status(400).json({ message: "No driver IDs provided" });
+    }
+
+    const driverIds = ids.split(",");
+
+    // Fetch drivers from database
+    const drivers = await prisma.driver.findMany({
+      where: {
+        id: { in: driverIds },
+      },
+    });
+
+    res.json(drivers);
+  } catch (error) {
+    console.error("Error fetching driver data:", error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+};

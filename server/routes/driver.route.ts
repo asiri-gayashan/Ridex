@@ -1,7 +1,7 @@
 import express from "express";
 import {
 //   getAllRides,
-//   getDriversById,
+  getDriversById,
 //   getLoggedInDriverData,
 //   newRide,
   sendingOtpToPhone,
@@ -30,7 +30,7 @@ driverRouter.post("/registration-driver", verifyingEmailOtp);
 
 driverRouter.get("/me", isAuthenticatedDriver, getLoggedInDriverData);
 
-// driverRouter.get("/get-drivers-data", getDriversById);
+driverRouter.get("/get-drivers-data", getDriversById);
 
 driverRouter.put("/update-status", isAuthenticatedDriver, updateDriverStatus);
 

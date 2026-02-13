@@ -10,29 +10,35 @@ import {
   Image,
   ActivityIndicator,
 } from "react-native";
-import style from "./style";
+import styles from "./style";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { external } from "@/styles/external.style";
-
-import { useCallback, useEffect, useState } from "react";
 import { windowHeight, windowWidth } from "@/themes/app.constant";
 import MapView, { Marker } from "react-native-maps";
 import MapViewDirections from "react-native-maps-directions";
-import { Clock, LeftArrow, PickLocation, PickUpLocation } from "@/utils/icons";
 import { router } from "expo-router";
-import moment from "moment";
+import { Clock, LeftArrow, PickLocation, PickUpLocation } from "@/utils/icons";
 import color from "@/themes/app.colors";
 import DownArrow from "@/assets/icons/downArrow";
 import PlaceHolder from "@/assets/icons/placeHolder";
-import { any } from "prop-types";
-import axios from "axios";
-import _ from "lodash";
 import { GooglePlacesAutocomplete } from "react-native-google-places-autocomplete";
+import _ from "lodash";
+import axios from "axios";
 import * as Location from "expo-location";
 import { Toast } from "react-native-toast-notifications";
+import moment from "moment";
 import { parseDuration } from "@/utils/time/parse.duration";
 import Button from "@/components/common/button";
+import { useGetUserData } from "@/hooks/useGetUserData";
+import * as Notifications from "expo-notifications";
+import * as Device from "expo-device";
+import Constants from "expo-constants";
 
 export default function RidePlanScreen() {
+  const { user } = useGetUserData();
+  const ws = useRef<any>(null);
+  const notificationListener = useRef<any>();
+  const [wsConnected, setWsConnected] = useState(false);
   const [places, setPlaces] = useState<any>([]);
   const [query, setQuery] = useState("");
   const [region, setRegion] = useState<any>({
@@ -46,35 +52,46 @@ export default function RidePlanScreen() {
   const [distance, setDistance] = useState<any>(null);
   const [locationSelected, setlocationSelected] = useState(false);
   const [selectedVehcile, setselectedVehcile] = useState("Car");
-
   const [travelTimes, setTravelTimes] = useState({
     driving: null,
     walking: null,
     bicycling: null,
     transit: null,
   });
-
   const [keyboardAvoidingHeight, setkeyboardAvoidingHeight] = useState(false);
+  const [driverLists, setdriverLists] = useState([]);
+  const [selectedDriver, setselectedDriver] = useState<DriverType>();
+  const [driverLoader, setdriverLoader] = useState(true);
 
-  const fetchPlaces = async (input: any) => {
-    try {
-      const response = await axios.get(
-        `https://maps.googleapis.com/maps/api/place/autocomplete/json`,
-        {
-          params: {
-            input,
-            key: process.env.EXPO_PUBLIC_GOOGLE_CLOUD_API_KEY,
-            language: "en",
-          },
-        },
+  Notifications.setNotificationHandler({
+    handleNotification: async () => ({
+      shouldShowAlert: true,
+      shouldPlaySound: true,
+      shouldSetBadge: false,
+    }),
+  });
+
+  useEffect(() => {
+    notificationListener.current =
+      Notifications.addNotificationReceivedListener((notification) => {
+        const orderData = {
+          currentLocation: notification.request.content.data.currentLocation,
+          marker: notification.request.content.data.marker,
+          distance: notification.request.content.data.distance,
+          driver: notification.request.content.data.orderData,
+        };
+        router.push({
+          pathname: "/(routes)/ride-details",
+          params: { orderData: JSON.stringify(orderData) },
+        });
+      });
+
+    return () => {
+      Notifications.removeNotificationSubscription(
+        notificationListener.current
       );
-      setPlaces(response.data.predictions);
-    } catch (error) {
-      console.log(error);
-    }
-  };
-
-  //If code doesnot work delete below useeffect
+    };
+  }, []);
 
   useEffect(() => {
     (async () => {
@@ -85,7 +102,7 @@ export default function RidePlanScreen() {
           {
             type: "danger",
             placement: "bottom",
-          },
+          }
         );
       }
 
@@ -102,6 +119,111 @@ export default function RidePlanScreen() {
       });
     })();
   }, []);
+
+  const initializeWebSocket = () => {
+    ws.current = new WebSocket("ws://10.0.2.2:8080");
+    // ws.current = new WebSocket("ws://192.168.1.11:8080");
+    ws.current.onopen = () => {
+      console.log("Connected to websocket server");
+      setWsConnected(true);
+    };
+
+    ws.current.onerror = (e: any) => {
+      console.log("WebSocket error:", e.message);
+    };
+
+    ws.current.onclose = (e: any) => {
+      console.log("WebSocket closed:", e.code, e.reason);
+      setWsConnected(false);
+      // Attempt to reconnect after a delay
+      setTimeout(() => {
+        initializeWebSocket();
+      }, 5000);
+    };
+  };
+
+  useEffect(() => {
+    initializeWebSocket();
+    return () => {
+      if (ws.current) {
+        ws.current.close();
+      }
+    };
+  }, []);
+
+  useEffect(() => {
+    registerForPushNotificationsAsync();
+  }, []);
+
+  async function registerForPushNotificationsAsync() {
+    if (Device.isDevice) {
+      const { status: existingStatus } =
+        await Notifications.getPermissionsAsync();
+      let finalStatus = existingStatus;
+      if (existingStatus !== "granted") {
+        const { status } = await Notifications.requestPermissionsAsync();
+        finalStatus = status;
+      }
+      if (finalStatus !== "granted") {
+        Toast.show("Failed to get push token for push notification!", {
+          type: "danger",
+        });
+        return;
+      }
+      const projectId =
+        Constants?.expoConfig?.extra?.eas?.projectId ??
+        Constants?.easConfig?.projectId;
+      if (!projectId) {
+        Toast.show("Failed to get project id for push notification!", {
+          type: "danger",
+        });
+      }
+      try {
+        const pushTokenString = (
+          await Notifications.getExpoPushTokenAsync({
+            projectId,
+          })
+        ).data;
+        console.log(pushTokenString);
+        // return pushTokenString;
+      } catch (e: unknown) {
+        Toast.show(`${e}`, {
+          type: "danger",
+        });
+      }
+    } else {
+      Toast.show("Must use physical device for Push Notifications", {
+        type: "danger",
+      });
+    }
+
+    if (Platform.OS === "android") {
+      Notifications.setNotificationChannelAsync("default", {
+        name: "default",
+        importance: Notifications.AndroidImportance.MAX,
+        vibrationPattern: [0, 250, 250, 250],
+        lightColor: "#FF231F7C",
+      });
+    }
+  }
+
+  const fetchPlaces = async (input: any) => {
+    try {
+      const response = await axios.get(
+        `https://maps.googleapis.com/maps/api/place/autocomplete/json`,
+        {
+          params: {
+            input,
+            key: process.env.EXPO_PUBLIC_GOOGLE_CLOUD_API_KEY,
+            language: "en",
+          },
+        }
+      );
+      setPlaces(response.data.predictions);
+    } catch (error) {
+      console.log(error);
+    }
+  };
 
   const debouncedFetchPlaces = useCallback(_.debounce(fetchPlaces, 100), []);
 
@@ -141,7 +263,7 @@ export default function RidePlanScreen() {
       try {
         const response = await axios.get(
           `https://maps.googleapis.com/maps/api/distancematrix/json`,
-          { params },
+          { params }
         );
 
         const elements = response.data.rows[0].elements[0];
@@ -165,7 +287,7 @@ export default function RidePlanScreen() {
             place_id: placeId,
             key: process.env.EXPO_PUBLIC_GOOGLE_CLOUD_API_KEY,
           },
-        },
+        }
       );
       const { lat, lng } = response.data.result.geometry.location;
 
@@ -180,7 +302,7 @@ export default function RidePlanScreen() {
         longitude: lng,
       });
       setPlaces([]);
-      // requestNearbyDrivers();
+      requestNearbyDrivers();
       setlocationSelected(true);
       setkeyboardAvoidingHeight(false);
       if (currentLocation) {
@@ -215,11 +337,89 @@ export default function RidePlanScreen() {
         currentLocation.latitude,
         currentLocation.longitude,
         marker.latitude,
-        marker.longitude,
+        marker.longitude
       );
       setDistance(dist);
     }
   }, [marker, currentLocation]);
+
+  const getNearbyDrivers = () => {
+    ws.current.onmessage = async (e: any) => {
+      try {
+        const message = JSON.parse(e.data);
+        if (message.type === "nearbyDrivers") {
+          await getDriversData(message.drivers);
+        }
+      } catch (error) {
+        console.log(error, "Error parsing websocket");
+      }
+    };
+  };
+
+  const getDriversData = async (drivers: any) => {
+    // Extract driver IDs from the drivers array
+    const driverIds = drivers.map((driver: any) => driver.id).join(",");
+    const response = await axios.get(
+      `${process.env.EXPO_PUBLIC_SERVER_URI}/driver/get-drivers-data`,
+      {
+        params: { ids: driverIds },
+      }
+    );
+
+    const driverData = response.data;
+    setdriverLists(driverData);
+    setdriverLoader(false);
+  };
+
+  const requestNearbyDrivers = () => {
+    console.log(wsConnected);
+    if (currentLocation && wsConnected) {
+      ws.current.send(
+        JSON.stringify({
+          type: "requestRide",
+          role: "user",
+          latitude: currentLocation.latitude,
+          longitude: currentLocation.longitude,
+        })
+      );
+      getNearbyDrivers();
+    }
+  };
+
+  const sendPushNotification = async (expoPushToken: string, data: any) => {
+    const message = {
+      to: expoPushToken,
+      sound: "default",
+      title: "New Ride Request",
+      body: "You have a new ride request.",
+      data: { orderData: data },
+    };
+
+    await axios.post("https://exp.host/--/api/v2/push/send", message);
+  };
+
+  const handleOrder = async () => {
+    const currentLocationName = await axios.get(
+      `https://maps.googleapis.com/maps/api/geocode/json?latlng=${currentLocation?.latitude},${currentLocation?.longitude}&key=${process.env.EXPO_PUBLIC_GOOGLE_CLOUD_API_KEY}`
+    );
+    const destinationLocationName = await axios.get(
+      `https://maps.googleapis.com/maps/api/geocode/json?latlng=${marker?.latitude},${marker?.longitude}&key=${process.env.EXPO_PUBLIC_GOOGLE_CLOUD_API_KEY}`
+    );
+
+    const data = {
+      user,
+      currentLocation,
+      marker,
+      distance: distance.toFixed(2),
+      currentLocationName:
+        currentLocationName.data.results[0].formatted_address,
+      destinationLocation:
+        destinationLocationName.data.results[0].formatted_address,
+    };
+    const driverPushToken = "ExponentPushToken[TbiJzyBSPf5vR7x5cH6qBp]";
+
+    await sendPushNotification(driverPushToken, JSON.stringify(data));
+  };
 
   return (
     <KeyboardAvoidingView
@@ -249,99 +449,124 @@ export default function RidePlanScreen() {
           </MapView>
         </View>
       </View>
-      <View style={style.contentContainer}>
-        <View style={[style.container]}>
+      <View style={styles.contentContainer}>
+        <View style={[styles.container]}>
           {locationSelected ? (
-            <ScrollView
-              style={{
-                paddingBottom: windowHeight(20),
-                height: windowHeight(280),
-              }}
-            >
-              <View
-                style={{
-                  borderBottomWidth: 1,
-                  borderBottomColor: "#b5b5b5",
-                  paddingBottom: windowHeight(10),
-                  flexDirection: "row",
-                }}
-              >
-                <Pressable onPress={() => setlocationSelected(false)}>
-                  <LeftArrow />
-                </Pressable>
-                <Text
+            <>
+              {driverLoader ? (
+                <View
                   style={{
-                    margin: "auto",
-                    fontSize: 20,
-                    fontWeight: "600",
+                    flex: 1,
+                    alignItems: "center",
+                    justifyContent: "center",
+                    height: 400,
                   }}
                 >
-                  Gathering options
-                </Text>
-              </View>
-
-              <View style={{ padding: windowWidth(10), borderColor: "000" }}>
-                <Pressable
+                  <ActivityIndicator size={"large"} />
+                </View>
+              ) : (
+                <ScrollView
                   style={{
-                    width: windowWidth(420),
-                    borderWidth: selectedVehcile === "car" ? 2 : 0,
-                    borderRadius: 10,
-                    padding: 10,
-                    marginVertical: 5,
-                  }}
-                  onPress={() => {
-                    setselectedVehcile("car");
+                    paddingBottom: windowHeight(20),
+                    height: windowHeight(280),
                   }}
                 >
-                  <View style={{ margin: "auto" }}>
-                    <Image
-                      source={require("@/assets/images/vehicles/car.png")}
-                      style={{ width: 90, height: 80 }}
-                    />
-                  </View>
-
                   <View
                     style={{
+                      borderBottomWidth: 1,
+                      borderBottomColor: "#b5b5b5",
+                      paddingBottom: windowHeight(10),
                       flexDirection: "row",
-                      alignItems: "center",
-                      justifyContent: "space-between",
                     }}
                   >
-                    <View>
-                      <Text style={{ fontSize: 20, fontWeight: "600" }}>
-                        RideX
-                      </Text>
-                      <Text style={{ fontSize: 16 }}>
-                        {getEstimatedArrivalTime(travelTimes.driving)} dropoff
-                      </Text>
-                    </View>
+                    <Pressable onPress={() => setlocationSelected(false)}>
+                      <LeftArrow />
+                    </Pressable>
                     <Text
                       style={{
-                        fontSize: windowWidth(20),
+                        margin: "auto",
+                        fontSize: 20,
                         fontWeight: "600",
                       }}
                     >
-                      {" "}
-                      Rs {(distance.toFixed(2) * 45).toFixed(2)}
+                      Gathering options
                     </Text>
                   </View>
-                </Pressable>
+                  <View style={{ padding: windowWidth(10) }}>
+                    {driverLists?.map((driver: DriverType) => (
+                      <Pressable
+                        style={{
+                          width: windowWidth(420),
+                          borderWidth:
+                            selectedVehcile === driver.vehicle_type ? 2 : 0,
+                          borderRadius: 10,
+                          padding: 10,
+                          marginVertical: 5,
+                        }}
+                        onPress={() => {
+                          setselectedVehcile(driver.vehicle_type);
+                        }}
+                      >
+                        <View style={{ margin: "auto" }}>
+                          <Image
+                            source={
+                              driver?.vehicle_type === "Car"
+                                ? require("@/assets/images/vehicles/car.png")
+                                : driver?.vehicle_type === "Motorcycle"
+                                ? require("@/assets/images/vehicles/bike.png")
+                                : require("@/assets/images/vehicles/bike.png")
+                            }
+                            style={{ width: 90, height: 80 }}
+                          />
+                        </View>
+                        <View
+                          style={{
+                            flexDirection: "row",
+                            alignItems: "center",
+                            justifyContent: "space-between",
+                          }}
+                        >
+                          <View>
+                            <Text style={{ fontSize: 20, fontWeight: "600" }}>
+                              RideWave {driver?.vehicle_type}
+                            </Text>
+                            <Text style={{ fontSize: 16 }}>
+                              {getEstimatedArrivalTime(travelTimes.driving)}{" "}
+                              dropoff
+                            </Text>
+                          </View>
+                          <Text
+                            style={{
+                              fontSize: windowWidth(20),
+                              fontWeight: "600",
+                            }}
+                          >
+                            BDT{" "}
+                            {(
+                              distance.toFixed(2) * parseInt(driver.rate)
+                            ).toFixed(2)}
+                          </Text>
+                        </View>
+                      </Pressable>
+                    ))}
 
-                <View
-                  style={{
-                    paddingHorizontal: windowWidth(10),
-                    marginTop: windowHeight(15),
-                  }}
-                >
-                  <Button
-                    backgroundColor={"#000"}
-                    textColor="#fff"
-                    title={`Confirm Booking`}
-                    // onPress={() => handleOrder()}
-                  />
-                </View>
-              </View>
-            </ScrollView>
+                    <View
+                      style={{
+                        paddingHorizontal: windowWidth(10),
+                        marginTop: windowHeight(15),
+                      }}
+                    >
+                      <Button
+                        backgroundColor={"#000"}
+                        textColor="#fff"
+                        title={`Confirm Booking`}
+                        onPress={() => handleOrder()}
+                      />
+                    </View>
+                  </View>
+                </ScrollView>
+              )}
+            </>
           ) : (
             <>
               <View style={{ flexDirection: "row", alignItems: "center" }}>
@@ -384,7 +609,6 @@ export default function RidePlanScreen() {
                   <DownArrow />
                 </View>
               </View>
-
               {/* picking up location */}
               <View
                 style={{
@@ -425,7 +649,6 @@ export default function RidePlanScreen() {
                   }}
                 >
                   <PlaceHolder />
-
                   <View
                     style={{
                       marginLeft: 5,
@@ -461,18 +684,18 @@ export default function RidePlanScreen() {
                         },
                       }}
                       textInputProps={{
-                        onChangeText: (text: string) => handleInputChange(text),
+                        onChangeText: (text) => handleInputChange(text),
                         value: query,
                         onFocus: () => setkeyboardAvoidingHeight(true),
                       }}
-                      onFail={(error: any) => console.log(error)}
+                      onFail={(error) => console.log(error)}
                       fetchDetails={true}
                       debounce={200}
                     />
                   </View>
                 </View>
               </View>
-
+              {/* Last sessions */}
               {places.map((place: any, index: number) => (
                 <Pressable
                   key={index}
@@ -491,8 +714,6 @@ export default function RidePlanScreen() {
               ))}
             </>
           )}
-
-          {/*hllo*/}
         </View>
       </View>
     </KeyboardAvoidingView>
