@@ -33,6 +33,7 @@ import { useGetUserData } from "@/hooks/useGetUserData";
 import * as Notifications from "expo-notifications";
 import * as Device from "expo-device";
 import Constants from "expo-constants";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 export default function RidePlanScreen() {
   const { user } = useGetUserData();
@@ -406,6 +407,8 @@ export default function RidePlanScreen() {
       `https://maps.googleapis.com/maps/api/geocode/json?latlng=${marker?.latitude},${marker?.longitude}&key=${process.env.EXPO_PUBLIC_GOOGLE_CLOUD_API_KEY}`
     );
 
+    // console.log(AsyncStorage.getItem("accessToken"))
+
     const data = {
       user,
       currentLocation,
@@ -416,10 +419,26 @@ export default function RidePlanScreen() {
       destinationLocation:
         destinationLocationName.data.results[0].formatted_address,
     };
-    const driverPushToken = "ExponentPushToken[TbiJzyBSPf5vR7x5cH6qBp]";
+    const driverPushToken = "ExponentPushToken[HnyPkNJxl5a9BFDD5M_kXZ]";
+
+    console.log(user)
+
+    
 
     await sendPushNotification(driverPushToken, JSON.stringify(data));
   };
+
+
+
+
+
+//   const test = async () => {
+//   const token = await AsyncStorage.getItem("accessToken");
+//   console.log("FINAL TOKEN CHECK:", token);
+// };
+
+// test();
+
 
   return (
     <KeyboardAvoidingView
@@ -541,7 +560,7 @@ export default function RidePlanScreen() {
                               fontWeight: "600",
                             }}
                           >
-                            BDT{" "}
+                            LKR{" "}
                             {(
                               distance.toFixed(2) * parseInt(driver.rate)
                             ).toFixed(2)}

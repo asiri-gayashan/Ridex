@@ -341,8 +341,15 @@ export default function HomeScreen() {
       });
   };
 
+  // const acceptRideHandler = async () => {
+    
+  //       router.push("/(routes)/ride-details");
+     
+  // };
+
   const acceptRideHandler = async () => {
     const accessToken = await AsyncStorage.getItem("accessToken");
+      // console.log(accessToken);
     await axios
       .post(
         `${process.env.EXPO_PUBLIC_SERVER_URI}/driver/new-ride`,
@@ -367,7 +374,8 @@ export default function HomeScreen() {
           marker,
           distance,
         };
-        const driverPushToken = "ExponentPushToken[A22bNzKGUMegAXVEqzDnUx]";
+        const driverPushToken = "ExponentPushToken[HnyPkNJxl5a9BFDD5M_kXZ]";
+
 
         await sendPushNotification(driverPushToken, data);
 
@@ -379,6 +387,8 @@ export default function HomeScreen() {
           distance,
           rideData: res.data.newRide,
         };
+
+
         router.push({
           pathname: "/(routes)/ride-details",
           params: { orderData: JSON.stringify(rideData) },
@@ -474,7 +484,7 @@ export default function HomeScreen() {
                 }}
               >
                 Amount:
-                {(distance * parseInt(driver?.rate!)).toFixed(2)} BDT
+                {(distance * parseInt(driver?.rate!)).toFixed(2)} LKR
               </Text>
               <View
                 style={{

@@ -35,6 +35,8 @@ export const isAuthenticated = (
           },
         });
         // Attach the user data to the request object
+        console.log("Decoded:", decoded);
+console.log("User from DB:", userData);
         req.user = userData;
         next();
       }
@@ -43,6 +45,8 @@ export const isAuthenticated = (
     console.log(error);
   }
 };
+
+
 
 
 

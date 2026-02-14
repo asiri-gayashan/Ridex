@@ -23,6 +23,7 @@ app.use(cookieParser());
 
 // routes
 app.use("/api/v1", userRouter);
+// app.use("/api/v1/driver", driverRouter);
 app.use("/api/v1/driver", driverRouter);
 
 

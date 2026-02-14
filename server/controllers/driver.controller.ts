@@ -45,9 +45,6 @@ export const sendingOtpToPhone = async (
   }
 };
 
-
-
-
 // verifying otp for login
 export const verifyPhoneOtpForLogin = async (
   req: Request,
@@ -86,7 +83,6 @@ export const verifyPhoneOtpForLogin = async (
   }
 };
 
-
 // verifying phone otp for registration
 export const verifyPhoneOtpForRegistration = async (
   req: Request,
@@ -103,8 +99,6 @@ export const verifyPhoneOtpForRegistration = async (
           to: phone_number,
           code: otp,
         });
-
-      
 
       await sendingOtpToEmail(req, res);
     } catch (error) {
@@ -191,9 +185,6 @@ export const sendingOtpToEmail = async (req: Request, res: Response) => {
   }
 };
 
-
-
-
 // verifying email otp and creating driver account
 export const verifyingEmailOtp = async (req: Request, res: Response) => {
   try {
@@ -248,7 +239,6 @@ export const verifyingEmailOtp = async (req: Request, res: Response) => {
   }
 };
 
-
 // get logged in driver data
 export const getLoggedInDriverData = async (req: any, res: Response) => {
   try {
@@ -263,8 +253,7 @@ export const getLoggedInDriverData = async (req: any, res: Response) => {
   }
 };
 
-
-
+// updating driver status
 export const updateDriverStatus = async (req: any, res: Response) => {
   try {
     const { status } = req.body;
@@ -290,8 +279,7 @@ export const updateDriverStatus = async (req: any, res: Response) => {
   }
 };
 
-
-
+// get drivers data with id
 export const getDriversById = async (req: Request, res: Response) => {
   try {
     const { ids } = req.query as any;
@@ -314,4 +302,124 @@ export const getDriversById = async (req: Request, res: Response) => {
     console.error("Error fetching driver data:", error);
     res.status(500).json({ message: "Internal server error" });
   }
+};
+
+// creating new ride
+export const newRide = async (req: any, res: Response) => {
+  try {
+    const {
+      userId,
+      charge,
+      status,
+      currentLocationName,
+      destinationLocationName,
+      distance,
+    } = req.body;
+
+    const newRide = await prisma.rides.create({
+      data: {
+        // userId: "698c8ae5f0943577b1949f7a", //changethis one 
+        userId, //changethis one 
+        driverId: req.driver.id,
+        charge: parseFloat(charge),
+        status,
+        currentLocationName,
+        destinationLocationName,
+        distance,
+      },
+    });
+    res.status(201).json({ success: true, newRide });
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+};
+
+// updating ride status
+export const updatingRideStatus = async (req: any, res: Response) => {
+  try {
+    const { rideId, rideStatus } = req.body;
+
+    // Validate input
+    if (!rideId || !rideStatus) {
+      return res
+        .status(400)
+        .json({ success: false, message: "Invalid input data" });
+    }
+
+    const driverId = req.driver?.id;
+    if (!driverId) {
+      return res.status(401).json({ success: false, message: "Unauthorized" });
+    }
+
+    // Fetch the ride data to get the rideCharge
+    const ride = await prisma.rides.findUnique({
+      where: {
+        id: rideId,
+      },
+    });
+
+    if (!ride) {
+      return res
+        .status(404)
+        .json({ success: false, message: "Ride not found" });
+    }
+
+    const rideCharge = ride.charge;
+
+    // Update ride status
+    const updatedRide = await prisma.rides.update({
+      where: {
+        id: rideId,
+        driverId,
+      },
+      data: {
+        status: rideStatus,
+      },
+    });
+
+    if (rideStatus === "Completed") {
+      // Update driver stats if the ride is completed
+      await prisma.driver.update({
+        where: {
+          id: driverId,
+        },
+        data: {
+          totalEarning: {
+            increment: rideCharge,
+          },
+          totalRides: {
+            increment: 1,
+          },
+        },
+      });
+    }
+
+    res.status(201).json({
+      success: true,
+      updatedRide,
+    });
+  } catch (error: any) {
+    console.error(error);
+    res.status(400).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
+// getting drivers rides
+export const getAllRides = async (req: any, res: Response) => {
+  const rides = await prisma.rides.findMany({
+    where: {
+      driverId: req.driver?.id,
+    },
+    include: {
+      driver: true,
+      user: true,
+    },
+  });
+  res.status(201).json({
+    rides,
+  });
 };

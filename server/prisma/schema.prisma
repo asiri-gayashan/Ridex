@@ -7,7 +7,6 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-
 model user {
   id                String   @id @default(auto()) @map("_id") @db.ObjectId
   name              String?
@@ -21,14 +20,11 @@ model user {
   rides             rides[]  @relation("UserRides")
 }
 
-
 enum VehicleType {
   Car
   Motorcycle
   CNG
 }
-
-
 
 model driver {
   id                  String      @id @default(auto()) @map("_id") @db.ObjectId
@@ -42,7 +38,7 @@ model driver {
   driving_license     String
   vehicle_color       String?
   rate                String
-  // notificationToken   String?
+  notificationToken   String?
   ratings             Float       @default(0)
   totalEarning        Float       @default(0)
   totalRides          Float       @default(0)
@@ -54,20 +50,18 @@ model driver {
   rides               rides[]     @relation("DriverRides")
 }
 
-
 model rides {
   id                      String   @id @default(auto()) @map("_id") @db.ObjectId
   userId                  String   @db.ObjectId
   driverId                String   @db.ObjectId
   charge                  Float
-  // currentLocationName     String
-  // destinationLocationName String
-  // distance                String
-  // status                  String
-  // rating                  Float?
+  currentLocationName     String
+  destinationLocationName String
+  distance                String
+  status                  String
+  rating                  Float?
   user                    user     @relation("UserRides", fields: [userId], references: [id])
   driver                  driver   @relation("DriverRides", fields: [driverId], references: [id])
   cratedAt                DateTime @default(now())
   updatedAt               DateTime @updatedAt
 }
-
