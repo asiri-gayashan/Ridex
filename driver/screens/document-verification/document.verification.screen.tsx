@@ -84,7 +84,7 @@ export default function DocumentVerificationScreen() {
             textAlign: "center",
           }}
         >
-          Ride Wave
+          RideX
         </Text>
         <View style={{ padding: windowWidth(20) }}>
           <ProgressBar fill={2} />
@@ -95,7 +95,7 @@ export default function DocumentVerificationScreen() {
             <View style={styles.space}>
               <TitleView
                 title={"Vehicle Registration"}
-                subTitle={"Explore your life by joining Ride Wave"}
+                subTitle={"Explore your life by joining RideX"}
               />
 
               <SelectInput

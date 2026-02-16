@@ -52,8 +52,11 @@ export default function HomeScreen() {
   const [currentLocation, setCurrentLocation] = useState<any>(null);
   const [lastLocation, setLastLocation] = useState<any>(null);
   const [recentRides, setrecentRides] = useState([]);
-  const ws = new WebSocket("ws://192.168.1.11:8080");
+  // const ws = new WebSocket("ws://192.168.1.11:8080");
   // const ws = new WebSocket("ws://10.0.2.2:8080");
+
+  const ws = useRef<WebSocket | null>(null);
+
 
 
   const { colors } = useTheme();
@@ -71,7 +74,7 @@ export default function HomeScreen() {
       Notifications.addNotificationReceivedListener((notification) => {
         // Handle the notification and extract data
         const orderData = JSON.parse(
-          notification.request.content.data.orderData
+          notification.request.content.data.orderData,
         );
         setIsModalVisible(true);
         setCurrentLocation({
@@ -91,11 +94,11 @@ export default function HomeScreen() {
             2,
           latitudeDelta:
             Math.abs(
-              orderData.currentLocation.latitude - orderData.marker.latitude
+              orderData.currentLocation.latitude - orderData.marker.latitude,
             ) * 2,
           longitudeDelta:
             Math.abs(
-              orderData.currentLocation.longitude - orderData.marker.longitude
+              orderData.currentLocation.longitude - orderData.marker.longitude,
             ) * 2,
         });
         setdistance(orderData.distance);
@@ -106,7 +109,7 @@ export default function HomeScreen() {
 
     return () => {
       Notifications.removeNotificationSubscription(
-        notificationListener.current
+        notificationListener.current,
       );
     };
   }, []);
@@ -176,30 +179,59 @@ export default function HomeScreen() {
   }
 
   // socket updates
+
+
   useEffect(() => {
-    ws.onopen = () => {
-      console.log("Connected to WebSocket server");
-      setWsConnected(true);
-    };
+  ws.current = new WebSocket("ws://192.168.1.11:8080");
 
-    ws.onmessage = (e) => {
-      const message = JSON.parse(e.data);
-      console.log("Received message:", message);
-      // Handle received location updates here
-    };
+  ws.current.onopen = () => {
+    console.log("Connected");
+  };
 
-    ws.onerror = (e: any) => {
-      console.log("WebSocket error:", e.message);
-    };
+  ws.current.onmessage = (e) => {
+    const message = JSON.parse(e.data);
+    console.log(message);
+  };
 
-    ws.onclose = (e) => {
-      console.log("WebSocket closed:", e.code, e.reason);
-    };
+  ws.current.onerror = (e: any) => {
+    console.log("WebSocket error:", e.message);
+  };
 
-    return () => {
-      ws.close();
-    };
-  }, []);
+  ws.current.onclose = () => {
+    console.log("Closed");
+  };
+
+  return () => {
+    ws.current?.close();
+  };
+}, []);
+
+
+
+  // useEffect(() => {
+  //   ws.onopen = () => {
+  //     console.log("Connected to WebSocket server");
+  //     setWsConnected(true);
+  //   };
+
+  //   ws.onmessage = (e) => {
+  //     const message = JSON.parse(e.data);
+  //     console.log("Received message:", message);
+  //     // Handle received location updates here
+  //   };
+
+  //   ws.onerror = (e: any) => {
+  //     console.log("WebSocket error:", e.message);
+  //   };
+
+  //   ws.onclose = (e) => {
+  //     console.log("WebSocket closed:", e.code, e.reason);
+  //   };
+
+  //   return () => {
+  //     ws.close();
+  //   };
+  // }, []);
 
   const haversineDistance = (coords1: any, coords2: any) => {
     const toRad = (x: any) => (x * Math.PI) / 180;
@@ -232,14 +264,15 @@ export default function HomeScreen() {
       })
       .then((res) => {
         if (res.data) {
-          if (ws.readyState === WebSocket.OPEN) {
+          if (ws.current?.readyState === WebSocket.OPEN) {
             const message = JSON.stringify({
               type: "locationUpdate",
               data: location,
               role: "driver",
               driver: res.data.driver.id!,
             });
-            ws.send(message);
+            ws.current?.send(message)
+            // ws.send();
           }
         }
       })
@@ -271,11 +304,11 @@ export default function HomeScreen() {
           ) {
             setCurrentLocation(newLocation);
             setLastLocation(newLocation);
-            if (ws.readyState === WebSocket.OPEN) {
+            if (ws.current?.readyState === WebSocket.OPEN) {
               await sendLocationUpdate(newLocation);
             }
           }
-        }
+        },
       );
     })();
   }, []);
@@ -288,7 +321,7 @@ export default function HomeScreen() {
         headers: {
           Authorization: `Bearer ${accessToken}`,
         },
-      }
+      },
     );
     setrecentRides(res.data.rides);
   };
@@ -314,7 +347,7 @@ export default function HomeScreen() {
           headers: {
             Authorization: `Bearer ${accessToken}`,
           },
-        }
+        },
       );
       if (changeStatus.data) {
         setIsOn(!isOn);
@@ -342,14 +375,14 @@ export default function HomeScreen() {
   };
 
   // const acceptRideHandler = async () => {
-    
+
   //       router.push("/(routes)/ride-details");
-     
+
   // };
 
   const acceptRideHandler = async () => {
     const accessToken = await AsyncStorage.getItem("accessToken");
-      // console.log(accessToken);
+    // console.log(accessToken);
     await axios
       .post(
         `${process.env.EXPO_PUBLIC_SERVER_URI}/driver/new-ride`,
@@ -365,7 +398,7 @@ export default function HomeScreen() {
           headers: {
             Authorization: `Bearer ${accessToken}`,
           },
-        }
+        },
       )
       .then(async (res) => {
         const data = {
@@ -375,7 +408,6 @@ export default function HomeScreen() {
           distance,
         };
         const driverPushToken = "ExponentPushToken[HnyPkNJxl5a9BFDD5M_kXZ]";
-
 
         await sendPushNotification(driverPushToken, data);
 
@@ -387,7 +419,6 @@ export default function HomeScreen() {
           distance,
           rideData: res.data.newRide,
         };
-
 
         router.push({
           pathname: "/(routes)/ride-details",
