@@ -11,7 +11,6 @@ import Button from "@/components/common/button";
 import { router } from "expo-router";
 import { useToast } from "react-native-toast-notifications";
 import axios from "axios";
-import { error } from "console";
 
 export default function LoginScreen() {
   const [phone_number, setphone_number] = useState("");
@@ -45,8 +44,34 @@ export default function LoginScreen() {
           placement: "bottom",
         });
       });
+    } else {
+      setloading(true);
+      const phoneNumber = `${countryCode}${phone_number}`;
+      await axios
+        .post(`${process.env.EXPO_PUBLIC_SERVER_URI}/registration`, {
+          phone_number: phoneNumber,
+        })
+        
+        .then((res) => {
+          setloading(false);
+          router.push({
+            pathname: "/(routes)/otp-verification",
+            params: { phoneNumber },
+          });
+        })
+        .catch((error) => {
+          console.log(error);
+          setloading(false);
+          toast.show(
+            "Something went wrong! please re check your phone number!",
+            {
+              type: "danger",
+              placement: "bottom",
+            }
+          );
+        });
+    }
   };
-
   return (
     <AuthContainer
       topSpace={windowHeight(150)}

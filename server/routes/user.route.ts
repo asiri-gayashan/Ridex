@@ -5,7 +5,7 @@ import { isAuthenticated } from "../middleware/isAuthenticated";
 
 const userRouter = express.Router();
 userRouter.post("/registration", registerUser);
-
+userRouter.post("/verify-otp", verifyOtp);
 
 userRouter.post("/verify-otp", verifyOtp);
 userRouter.put("/sign-up-user", signUpNewUser);
