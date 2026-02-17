@@ -5,6 +5,8 @@ import { Stack } from "expo-router";
 import { ToastProvider } from "react-native-toast-notifications";
 import { LogBox } from "react-native";
 import { useFonts } from "expo-font";
+import { View, ActivityIndicator } from "react-native";
+
 
 SplashScreen.preventAutoHideAsync();
 
@@ -12,6 +14,8 @@ export default function RootLayout() {
   const [loaded, error] = useFonts({
     "GTWalsheimPro-Regular": require("../assets/fonts/GTWalsheimPro-Regular.ttf"),
     "GTWalsheimPro-Medium": require("../assets/fonts/GTWalsheimPro-Medium.ttf"),
+    "GTWalsheimPro-Bold": require("../assets/fonts/GTWalsheimPro-Bold.ttf"),
+    "TT-Octosquares-Medium": require("../assets/fonts/TT-Octosquares-Medium.ttf"),
   });
 
   useEffect(() => {

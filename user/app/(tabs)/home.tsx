@@ -1,10 +1,11 @@
-import { View, Text } from 'react-native'
-import React from 'react'
+import HomeScreen from "@/screens/home/home.screen";
+import Layouttabs from "@/app/(tabs)/_layout";
+import { View } from "react-native";
 
 export default function home() {
   return (
     <View>
-      <Text>home</Text>
+      <HomeScreen />
     </View>
-  )
+  );
 }

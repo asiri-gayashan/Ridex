@@ -4,4 +4,4 @@ export default function index() {
   return (
     <RegistrationScreen />
   )
-}
+}   

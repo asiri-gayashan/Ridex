@@ -19,9 +19,30 @@ export default function LoginScreen() {
   const toast = useToast();
 
   const handleSubmit = async () => {
-    if (phone_number === "" || countryCode === "") {
-      toast.show("Please fill the fields!", {
-        placement: "bottom",
+    const phoneNumber = `+${countryCode}${phone_number}`;
+    console.log(process.env.EXPO_PUBLIC_SERVER_URI);
+
+    // await axios.post(`${process.env.EXPO_PUBLIC_SERVER_URI}/registration`, {
+    await axios
+      .post(`${process.env.EXPO_PUBLIC_SERVER_URI}/registration`, {
+        phone_number: phoneNumber,
+      })
+      .then((res) => {
+        setloading(false);
+        console.log(res);
+
+        router.push({
+          pathname: "/(routes)/otp-verification",
+          params: { phoneNumber },
+        });
+      })
+      .catch((error) => {
+        // console.log(error);
+        setloading(false);
+        toast.show("Something went wrong! please re check your phone number!", {
+          type: "danger",
+          placement: "bottom",
+        });
       });
     } else {
       setloading(true);
@@ -69,11 +90,7 @@ export default function LoginScreen() {
                   setCountryCode={setCountryCode}
                 />
                 <View style={[external.mt_25, external.Pb_15]}>
-                  <Button
-                    title="Get Otp"
-                    onPress={() => handleSubmit()}
-                    disabled={loading}
-                  />
+                  <Button title="Get Otp" onPress={() => handleSubmit()}  disabled={loading} />
                 </View>
               </View>
             </View>

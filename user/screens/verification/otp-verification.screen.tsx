@@ -12,7 +12,7 @@ import { router, useLocalSearchParams } from "expo-router";
 import { commonStyles } from "@/styles/common.style";
 import { useToast } from "react-native-toast-notifications";
 import axios from "axios";
-// import AsyncStorage from "@react-native-async-storage/async-storag";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 export default function index() {
   const [otp, setOtp] = useState("");
@@ -27,19 +27,30 @@ export default function index() {
         placement: "bottom",
       });
     } else {
-      // setLoader(true);
+      setLoader(true);
       const otpNumbers = `${otp}`;
+      console.log(otpNumbers, phoneNumber);
+
       await axios
         .post(`${process.env.EXPO_PUBLIC_SERVER_URI}/verify-otp`, {
           phone_number: phoneNumber,
           otp: otpNumbers,
         })
-        .then((res) => {
-          // router.push("/(router)/otp-verification");
-          toast.show("Account verified!");
+        .then(async (res) => {
+          setLoader(false);
+          if (res.data.user.email === null) {
+            router.push({
+              pathname: "/(routes)/registration",
+              params: { user: JSON.stringify(res.data.user) },
+            });
+            toast.show("Account verified!");
+          } else {
+            await AsyncStorage.setItem("accessToken", res.data.accessToken);
+            router.push("/(tabs)/home");
+          }
         })
         .catch((error) => {
-          // setLoader(false);
+          setLoader(false);
           toast.show("Something went wrong! please re check your otp!", {
             type: "danger",
             placement: "bottom",
@@ -70,6 +81,7 @@ export default function index() {
               title="Verify"
               // onPress={() => router.push("/(tabs)/home")}
               onPress={() => handleSubmit()}
+              disabled={loader}
             />
           </View>
           <View style={external.mb_15}>

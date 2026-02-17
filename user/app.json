@@ -23,7 +23,7 @@
       "package": "com.becodemy.RideWave",
       "config": {
         "googleMaps": {
-          "apiKey": ""
+          "apiKey": "AIzaSyDNaXdGGDljKmK8GaY6AnGMEq131yOlbio"
         }
       }
     },
@@ -41,6 +41,11 @@
     ],
     "experiments": {
       "typedRoutes": true
+    },
+    "extra": {
+      "eas": {
+        "projectId": "c745a4b0-5495-4558-94e0-ba81105a61ac"
+      }
     }
   }
 }
